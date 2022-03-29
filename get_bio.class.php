@@ -11,11 +11,6 @@ class get_bio extends actors {
 		$this -> setProxy ($proxy);
 	}
 
-	public function
-	getEndpoint (): string
-	{
-		return $this -> endpoint;
-	}
 
 }
 

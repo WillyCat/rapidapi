@@ -14,7 +14,7 @@ class rapidapi {
 	private string $source; // db or request
 
 	public function
-	__construct(string $keyfile, ?callable $proxy = null)
+	__construct()
 	{
 		$this -> endpoint = '';
 		$this -> params = [ ];
@@ -119,6 +119,12 @@ class rapidapi {
 	getVersion(): string
 	{
 		return '1.0';
+	}
+
+	public function
+	getEndpoint (): string
+	{
+		return $this -> endpoint;
 	}
 }
 
