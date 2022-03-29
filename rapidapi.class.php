@@ -77,10 +77,11 @@ class rapidapi {
 			if ($req -> getStatus() != 200)
 				throw new Exception ('HTTP ' . $req -> getStatus());
 
-			$headers = $req -> getHeaders(); // array of code:value
+			// $headers = $req -> getHeaders(); // array of code:value
 			// $req -> getHeader('Content-Length') // header value or null
 			// $req -> getContentLength() // Content-Length value or 0
 			$this -> body = $req -> getBody(); // string, can be empty
+			$this -> source = 'api';
 			if ($this -> proxy != null)
                                 ($this -> proxy)('store', $url -> getUrl(), $this -> body);
 		} catch (tinyHttp_Exception $e) {
