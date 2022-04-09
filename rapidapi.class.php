@@ -12,6 +12,7 @@ class rapidapi {
 	private ?string $body;
 	private array $result;
 	private string $source; // db or request
+	private string $lastError;
 
 	public function
 	__construct()
@@ -22,6 +23,7 @@ class rapidapi {
 		$this -> proxy = null;
 		$this -> keyfile = null;
 		$this -> api_key = null;
+		$this -> lastError = '';
 	}
 
 	protected function
@@ -32,7 +34,10 @@ class rapidapi {
 	protected function
 	setKeyfile (string $keyfile) {
 		if (!file_exists ($keyfile))
-			throw new Exception ('keyfile not found');
+		{
+			$this -> lastError = 'keyfile not found';
+			throw new Exception ($this -> lastError);
+		}
 		$this -> keyfile = $keyfile;
 		$this -> setKey( trim(file_get_contents ($keyfile)) );
 	}
@@ -50,6 +55,12 @@ class rapidapi {
 	private function
 	addHeader(string $name, string $value): void {
 		$this -> headers[$name] = $value;
+	}
+
+	public function
+	getLastError(): string
+	{
+		return $this -> lastError;
 	}
 
 	private function
@@ -75,7 +86,19 @@ class rapidapi {
 		try {
 			$req = $http -> send();
 			if ($req -> getStatus() != 200)
-				throw new Exception ('HTTP ' . $req -> getStatus());
+			{
+				$errorJson = $req -> getBody();
+				if (substr ($errorJson, 0, 1) == '{')
+				{
+					$errorArray = json_decode ($errorJson, true);
+					if (array_key_exists ('message', $errorArray))
+						$this -> lastError = $errorArray['message'];
+				}
+				else
+					$this -> lastError = 'HTTP ' . $req -> getStatus();
+
+				throw new Exception ($this -> lastError);
+			}
 
 			// $headers = $req -> getHeaders(); // array of code:value
 			// $req -> getHeader('Content-Length') // header value or null
@@ -85,6 +108,7 @@ class rapidapi {
 			if ($this -> proxy != null)
                                 ($this -> proxy)('store', $url -> getUrl(), $this -> body);
 		} catch (tinyHttp_Exception $e) {
+			$this -> lastError = $e -> getMessage();
 			throw new Exception ($e -> getMessage());
 		}
 	}
@@ -92,9 +116,15 @@ class rapidapi {
 	public function
 	go(): void {
 		if ($this -> endpoint == '')
-			throw new Exception ('Missing endpoint');
+		{
+			$this -> lastError = 'Missing endpoint';
+			throw new Exception ($this -> lastError);
+		}
 		if (is_null ($this -> api_key))
-			throw new Exception ('Missing api key');
+		{
+			$this -> lastError = 'Missing api key';
+			throw new Exception ($this -> lastError);
+		}
 
 		$this -> fetch();
 
@@ -119,7 +149,7 @@ class rapidapi {
 	static function
 	getVersion(): string
 	{
-		return '1.0';
+		return '1.1';
 	}
 
 	public function
